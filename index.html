@@ -41,6 +41,7 @@
       overflow:hidden;
     }
 
+    /* View.js 느낌: Glass / Clean / Big */
     .app{
       height:100%;
       width:100%;
@@ -59,6 +60,7 @@
       -webkit-backdrop-filter: blur(14px);
     }
 
+    /* Left: Main */
     .main{
       position:relative;
       display:flex;
@@ -69,11 +71,10 @@
 
     .mainHeader{
       display:flex;
-      align-items:flex-start;
+      align-items:center;
       justify-content:space-between;
       padding: 18px 18px 14px 18px;
       border-bottom: 1px solid var(--border);
-      gap: 14px;
     }
     .title{
       display:flex;
@@ -92,16 +93,8 @@
       color: var(--muted);
       font-size: 13px;
       line-height:1.35;
+      max-width: 820px;
     }
-
-    .headerRight{
-      display:flex;
-      flex-direction:column;
-      align-items:flex-end;
-      gap:10px;
-      min-width: 320px;
-    }
-
     .statusPill{
       display:inline-flex;
       align-items:center;
@@ -113,6 +106,7 @@
       color: var(--muted);
       font-size: 12px;
       white-space:nowrap;
+      margin-left: 12px;
     }
     .dot{
       width:9px; height:9px; border-radius:999px;
@@ -122,48 +116,6 @@
     .dot.running{ background: #4dffb5; box-shadow:0 0 0 4px rgba(77,255,181,0.12); }
     .dot.done{ background: #4d7cff; box-shadow:0 0 0 4px rgba(77,124,255,0.14); }
     .dot.error{ background: var(--danger); box-shadow:0 0 0 4px rgba(255,77,79,0.14); }
-
-    .seedBox{
-      width:100%;
-      padding: 10px 12px;
-      border-radius: 14px;
-      border:1px solid rgba(255,255,255,0.12);
-      background: rgba(0,0,0,0.18);
-      display:none; /*flex*/
-      flex-direction:column;
-      gap: 6px;
-    }
-    .seedRow{
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      gap:10px;
-      font-size: 12px;
-      color: var(--muted);
-    }
-    .seedValue{
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-      color: rgba(255,255,255,0.88);
-      font-size: 12px;
-      word-break: break-all;
-      line-height:1.35;
-    }
-    .miniBtn{
-      height: 30px;
-      padding: 0 10px;
-      border-radius: 10px;
-      border: 1px solid rgba(255,255,255,0.16);
-      background: rgba(255,255,255,0.06);
-      color: rgba(255,255,255,0.90);
-      font-weight: 800;
-      font-size: 12px;
-      cursor:pointer;
-      transition: transform 120ms ease, filter 120ms ease, opacity 120ms ease;
-      white-space:nowrap;
-    }
-    .miniBtn:hover{ filter: brightness(1.06); transform: translateY(-1px); }
-    .miniBtn:active{ transform: translateY(0px); }
-    .miniBtn:disabled{ opacity:0.55; cursor:not-allowed; }
 
     .stage{
       position:relative;
@@ -177,12 +129,12 @@
     }
 
     .bigCenter{
+      position:relative;
       flex:1;
       min-height:0;
       display:flex;
       align-items:center;
       justify-content:center;
-      position:relative;
       overflow:hidden;
       border-radius: 16px;
       border: 1px dashed rgba(255,255,255,0.14);
@@ -190,12 +142,15 @@
     }
 
     .countdown{
-      font-size: clamp(72px, 10vw, 140px);
+      font-size: clamp(72px, 10vw, 80px);
       font-weight: 800;
       letter-spacing: -0.03em;
-      line-height:1;
+      line-height:1.05;
       text-shadow: 0 18px 80px rgba(0,0,0,0.55);
       user-select:none;
+      text-align:center;
+      padding: 0 14px;
+      white-space: pre-line; /* 줄바꿈 표시용 */
     }
 
     .hint{
@@ -282,11 +237,11 @@
       height: 44px;
       border-radius: 12px;
       border: 1px solid rgba(255,255,255,0.16);
-      background: rgba(255,255,255,0.06);
+      background: #426bed/*rgba(255,255,255,0.06)*/;
       color: var(--text);
-      padding: 0 12px;
+      padding: 0 0 0 6px;
       outline:none;
-      font-size: 14px;
+      font-size: 16px;
       font-weight: 600;
     }
     .field input:focus{
@@ -315,12 +270,14 @@
       cursor:not-allowed;
       box-shadow:none;
     }
+
     .btnSecondary{
       background: rgba(255,255,255,0.06);
       color: var(--text);
       box-shadow:none;
     }
 
+    /* Right: Reserve table */
     .side{
       display:flex;
       flex-direction:column;
@@ -422,8 +379,61 @@
       transition: opacity 180ms ease, transform 180ms ease;
       pointer-events:none;
     }
-    .toast.show{ opacity:1; transform: translateY(0); }
+    .toast.show{
+      opacity:1;
+      transform: translateY(0);
+    }
     .toast strong{ color:#fff; }
+
+    /* Seed box (top right) */
+    .headerRight{
+      display:flex;
+      flex-direction:column;
+      align-items:flex-end;
+      gap:10px;
+      min-width: 320px;
+    }
+    .seedBox{
+      width:100%;
+      padding: 10px 12px;
+      border-radius: 14px;
+      border:1px solid rgba(255,255,255,0.12);
+      background: rgba(0,0,0,0.18);
+      display:none; /*flex*/
+      flex-direction:column;
+      gap: 6px;
+    }
+    .seedRow{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .seedValue{
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      color: rgba(255,255,255,0.88);
+      font-size: 12px;
+      word-break: break-all;
+      line-height:1.35;
+    }
+    .miniBtn{
+      height: 30px;
+      padding: 0 10px;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.16);
+      background: rgba(255,255,255,0.06);
+      color: rgba(255,255,255,0.90);
+      font-weight: 800;
+      font-size: 12px;
+      cursor:pointer;
+      transition: transform 120ms ease, filter 120ms ease, opacity 120ms ease;
+      white-space:nowrap;
+    }
+    .miniBtn:hover{ filter: brightness(1.06); transform: translateY(-1px); }
+    .miniBtn:active{ transform: translateY(0px); }
+    .miniBtn:disabled{ opacity:0.55; cursor:not-allowed; }
 
     /* Log Modal */
     .modalOverlay{
@@ -490,6 +500,7 @@
       line-height:1.4;
     }
 
+    /* responsive */
     @media (max-width: 980px){
       body{ overflow:auto; }
       .app{
@@ -497,8 +508,12 @@
         min-height:100%;
         grid-template-columns: 1fr;
       }
-      .controls{ grid-template-columns: 1fr; }
+      .controls{
+        grid-template-columns: 1fr;
+      }
       .headerRight{ min-width: 0; width:100%; align-items:stretch; }
+      .mainHeader{ align-items:flex-start; flex-direction:column; }
+      .statusPill{ margin-left:0; }
     }
   </style>
 </head>
@@ -508,18 +523,15 @@
     <!-- MAIN -->
     <section class="card main">
       <div class="mainHeader">
-        <div class="title">
-          <h1>2026 글로벌리 키즈 ENG 자동 추첨 프로그램</h1>
-          <p>본 추첨은 W3C 표준 <strong>Web Cryptography API 기반의 CSPRNG</strong>와 <strong>Fisher–Yates 셔플 알고리즘을 적용</strong>하여 <strong>중복 및 확률 편향이 없는 공정한 자동 추첨 방식</strong>으로 진행됩니다.</p>
-          <!--p>응모자 번호는 <strong>1</strong>부터 <strong>N</strong>까지로 가정하며, 중복 없이 당첨/예비당첨을 추출합니다.</p-->
+        <div style="display:flex; align-items:flex-start; gap:12px; min-width:0;">
+          <div class="title">
+            <h1>2026 글로벌리 키즈 ENG 자동 추첨 프로그램</h1>
+            <p>본 추첨은 W3C 표준 Web Cryptography API 기반의 CSPRNG와 Fisher–Yates 셔플 알고리즘을 적용하여 중복 및 확률 편향이 없는 공정한 자동 추첨 방식으로 진행됩니다.</p>
+          </div>
+          
         </div>
 
         <div class="headerRight">
-          <div class="statusPill">
-            <span class="dot" id="statusDot"></span>
-            <span id="statusText">대기 중</span>
-          </div>
-
           <div class="seedBox">
             <div class="seedRow">
               <span>Seed (SHA-256 Counter RNG)</span>
@@ -531,6 +543,10 @@
             <div class="seedValue" id="seedValue">-</div>
           </div>
         </div>
+	<div class="statusPill" id="statusPill">
+            <span class="dot" id="statusDot"></span>
+            <span id="statusText">대기 중</span>
+          </div>
       </div>
 
       <div class="stage">
@@ -661,10 +677,9 @@
     }
 
     // ---------- Seeded RNG (SHA-256 Counter) ----------
-    // Output: deterministic uint32 stream from (seed || counter) hashed by SHA-256
     class Sha256CounterRNG {
       constructor(seedBytes){
-        this.seed = seedBytes;            // Uint8Array
+        this.seed = seedBytes;
         this.counter = 0;
       }
       async nextUint32(){
@@ -673,20 +688,17 @@
         dv.setUint32(0, this.counter >>> 0, false); // big-endian
         this.counter++;
 
-        // concat seed + counterBytes
         const input = new Uint8Array(this.seed.length + counterBytes.length);
         input.set(this.seed, 0);
         input.set(counterBytes, this.seed.length);
 
         const digest = await crypto.subtle.digest("SHA-256", input);
         const out = new Uint8Array(digest);
-        // take first 4 bytes as uint32 BE
         const dvOut = new DataView(out.buffer);
         return dvOut.getUint32(0, false);
       }
       async randomInt(maxExclusive){
         if(maxExclusive <= 0) throw new Error("maxExclusive must be > 0");
-        // rejection sampling to avoid modulo bias
         const maxUint32 = 0xFFFFFFFF;
         const limit = Math.floor((maxUint32 + 1) / maxExclusive) * maxExclusive;
         while(true){
@@ -696,7 +708,6 @@
       }
     }
 
-    // Sample k unique numbers from 1..N without replacement (partial Fisher-Yates)
     async function sampleUniqueSeeded(N, k, rng){
       const arr = new Array(N);
       for(let i=0;i<N;i++) arr[i] = i+1;
@@ -708,7 +719,6 @@
       return arr.slice(0,k);
     }
 
-    // Color palette for balls (cycling)
     const ballColors = [
       "linear-gradient(180deg, rgba(77,124,255,1), rgba(56,92,255,0.82))",
       "linear-gradient(180deg, rgba(255,77,239,1), rgba(180,77,255,0.82))",
@@ -726,7 +736,7 @@
     let revealTimer = null;
 
     let currentSeedHex = null;
-    let currentLog = null;     // object
+    let currentLog = null;
     let currentWinners = [];
     let currentReserves = [];
     let currentIntegrityHash = null;
@@ -834,10 +844,14 @@
     }
 
     async function buildIntegrityHash({timestampISO, N, winners, reserves, seedHex}){
-      const payload = JSON.stringify({
-        timestampISO, N, winners, reserves, seedHex
-      });
+      const payload = JSON.stringify({ timestampISO, N, winners, reserves, seedHex });
       return await sha256Hex(payload);
+    }
+
+    // ★ 요청 적용: WINNERS 대신 진행표시
+    function setWinnerProgressDisplay(done, total){
+      const left = Math.max(0, total - done);
+      $("countdownText").textContent = ` ${done}/${total}`;
     }
 
     async function startDraw(){
@@ -872,6 +886,7 @@
       // Prepare draw results up front (deterministic after seed)
       const totalPick = w + r;
       const picks = await sampleUniqueSeeded(N, totalPick, rng);
+
       const winners = picks.slice(0, w);
       const reserves = picks.slice(w);
 
@@ -952,17 +967,24 @@
       }
 
       let i = 0;
-      $("countdownText").textContent = "WINNERS";
+
+      // ★ 요청 적용: 시작 시점에 진행표시로 전환
+      setWinnerProgressDisplay(0, winners.length);
 
       revealTimer = setInterval(()=>{
         const ball = createBall(winners[i], i);
         row.appendChild(ball);
 
         i += 1;
+
+        // ★ 요청 적용: 매 공개마다 “당첨 X / 총Y · 남은 Z”
+        setWinnerProgressDisplay(i, winners.length);
+
         if(i >= winners.length){
           clearInterval(revealTimer);
           revealTimer = null;
 
+          // short pause then show reserves
           setTimeout(()=>{
             $("countdownText").textContent = "RESERVE";
             showReserves(reserves);
@@ -1033,7 +1055,6 @@
         const seedLabel = "Seed (hex):";
         doc.text(seedLabel, margin, y + 14);
 
-        // seed line wrap
         const seedText = currentSeedHex;
         const seedLines = doc.splitTextToSize(seedText, 520);
         doc.text(seedLines, margin + 70, y + 14);
