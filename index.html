@@ -1,0 +1,721 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>2026 글로벌리 키즈 ENG 자동 추첨 프로그램</title>
+
+  <!-- Pretendard -->
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
+
+  <style>
+    :root{
+      --bg: #0b1020;
+      --panel: rgba(255,255,255,0.06);
+      --panel2: rgba(255,255,255,0.10);
+      --border: rgba(255,255,255,0.10);
+      --text: rgba(255,255,255,0.92);
+      --muted: rgba(255,255,255,0.65);
+      --danger: #ff4d4f;
+      --ok: #2ecc71;
+      --shadow: 0 18px 50px rgba(0,0,0,0.45);
+      --radius: 18px;
+    }
+
+    *{ box-sizing:border-box; }
+    html, body{ height:100%; }
+    body{
+      margin:0;
+      font-family: Pretendard, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans KR", Arial, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(900px 500px at 20% 15%, rgba(77,124,255,0.22), transparent 70%),
+        radial-gradient(700px 420px at 80% 20%, rgba(255,77,239,0.18), transparent 65%),
+        radial-gradient(900px 650px at 50% 95%, rgba(50,220,170,0.12), transparent 70%),
+        linear-gradient(180deg, #070a14 0%, #0b1020 60%, #070a14 100%);
+      overflow:hidden;
+    }
+
+    /* View.js 느낌: Glass / Clean / Big */
+    .app{
+      height:100%;
+      width:100%;
+      display:grid;
+      grid-template-columns: 1.25fr 0.75fr;
+      gap: 18px;
+      padding: 18px;
+    }
+
+    .card{
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+    }
+
+    /* Left: Main */
+    .main{
+      position:relative;
+      display:flex;
+      flex-direction:column;
+      min-height:0;
+      overflow:hidden;
+    }
+
+    .mainHeader{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      padding: 18px 18px 14px 18px;
+      border-bottom: 1px solid var(--border);
+    }
+    .title{
+      display:flex;
+      flex-direction:column;
+      gap:4px;
+    }
+    .title h1{
+      font-size: 20px;
+      font-weight: 700;
+      margin:0;
+      letter-spacing:-0.02em;
+    }
+    .title p{
+      margin:0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height:1.35;
+    }
+    .statusPill{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      border:1px solid var(--border);
+      background: rgba(255,255,255,0.06);
+      color: var(--muted);
+      font-size: 12px;
+      white-space:nowrap;
+    }
+    .dot{
+      width:9px; height:9px; border-radius:999px;
+      background: rgba(255,255,255,0.25);
+      box-shadow: 0 0 0 4px rgba(255,255,255,0.06);
+    }
+    .dot.running{ background: #4dffb5; box-shadow:0 0 0 4px rgba(77,255,181,0.12); }
+    .dot.done{ background: #4d7cff; box-shadow:0 0 0 4px rgba(77,124,255,0.14); }
+    .dot.error{ background: var(--danger); box-shadow:0 0 0 4px rgba(255,77,79,0.14); }
+
+    .stage{
+      position:relative;
+      flex:1;
+      min-height:0;
+      padding: 18px;
+      display:flex;
+      flex-direction:column;
+      gap: 14px;
+      overflow:hidden;
+    }
+
+    .bigCenter{
+      flex:1;
+      min-height:0;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      position:relative;
+      overflow:hidden;
+      border-radius: 16px;
+      border: 1px dashed rgba(255,255,255,0.14);
+      background: rgba(255,255,255,0.04);
+    }
+
+    .countdown{
+      font-size: clamp(72px, 10vw, 140px);
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      line-height:1;
+      text-shadow: 0 18px 80px rgba(0,0,0,0.55);
+      user-select:none;
+    }
+
+    .hint{
+      position:absolute;
+      bottom: 14px;
+      left: 14px;
+      right: 14px;
+      display:flex;
+      justify-content:space-between;
+      gap:10px;
+      align-items:center;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .winnersArea{
+      display:flex;
+      flex-direction:column;
+      gap: 12px;
+      padding-top: 4px;
+    }
+    .winnersTitle{
+      display:flex;
+      align-items:flex-end;
+      justify-content:space-between;
+      padding: 0 4px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+    .winnersTitle strong{ color: var(--text); font-size: 13px; }
+
+    .ballsRow{
+      display:flex;
+      flex-wrap:wrap;
+      gap: 12px;
+      padding: 4px;
+      min-height: 86px;
+    }
+
+    .ball{
+      width: 72px;
+      height: 72px;
+      border-radius: 999px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-weight: 800;
+      font-size: 22px;
+      letter-spacing: -0.02em;
+      color: rgba(255,255,255,0.96);
+      border: 1px solid rgba(255,255,255,0.18);
+      box-shadow:
+        0 10px 28px rgba(0,0,0,0.35),
+        inset 0 0 0 2px rgba(255,255,255,0.10);
+      transform: translateY(12px) scale(0.95);
+      opacity:0;
+      animation: pop 420ms ease-out forwards;
+      user-select:none;
+    }
+    @keyframes pop{
+      to{ transform: translateY(0) scale(1); opacity:1; }
+    }
+
+    .controls{
+      display:grid;
+      grid-template-columns: 1fr 1fr 1fr auto;
+      gap: 12px;
+      padding: 16px 18px 18px 18px;
+      border-top: 1px solid var(--border);
+      background: rgba(0,0,0,0.10);
+    }
+
+    .field{
+      display:flex;
+      flex-direction:column;
+      gap: 6px;
+    }
+    .field label{
+      color: var(--muted);
+      font-size: 12px;
+      letter-spacing:-0.01em;
+    }
+    .field input{
+      height: 44px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,0.16);
+      background: rgba(255,255,255,0.06);
+      color: var(--text);
+      padding: 0 12px;
+      outline:none;
+      font-size: 14px;
+      font-weight: 600;
+    }
+    .field input:focus{
+      border-color: rgba(77,124,255,0.55);
+      box-shadow: 0 0 0 4px rgba(77,124,255,0.16);
+    }
+
+    .btn{
+      height: 44px;
+      padding: 0 16px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,0.18);
+      background: linear-gradient(180deg, rgba(77,124,255,0.95), rgba(56,92,255,0.85));
+      color: white;
+      font-weight: 800;
+      letter-spacing:-0.01em;
+      cursor:pointer;
+      box-shadow: 0 14px 40px rgba(40,70,255,0.25);
+      transition: transform 120ms ease, filter 120ms ease, opacity 120ms ease;
+      white-space:nowrap;
+    }
+    .btn:hover{ filter: brightness(1.05); transform: translateY(-1px); }
+    .btn:active{ transform: translateY(0px); }
+    .btn:disabled{
+      opacity:0.55;
+      cursor:not-allowed;
+      box-shadow:none;
+    }
+
+    .btnSecondary{
+      background: rgba(255,255,255,0.06);
+      color: var(--text);
+      box-shadow:none;
+    }
+
+    /* Right: Reserve table */
+    .side{
+      display:flex;
+      flex-direction:column;
+      min-height:0;
+      overflow:hidden;
+    }
+    .sideHeader{
+      padding: 18px;
+      border-bottom: 1px solid var(--border);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+    }
+    .sideHeader h2{
+      margin:0;
+      font-size: 14px;
+      font-weight: 800;
+      letter-spacing:-0.01em;
+    }
+    .sideHeader .sub{
+      color: var(--muted);
+      font-size: 12px;
+      white-space:nowrap;
+    }
+
+    .tableWrap{
+      padding: 12px 12px 14px 12px;
+      overflow:auto;
+      min-height:0;
+    }
+
+    table{
+      width:100%;
+      border-collapse:separate;
+      border-spacing:0;
+      overflow:hidden;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.04);
+    }
+    thead th{
+      text-align:left;
+      font-size: 12px;
+      color: var(--muted);
+      padding: 12px 12px;
+      border-bottom: 1px solid rgba(255,255,255,0.10);
+      background: rgba(255,255,255,0.04);
+    }
+    tbody td{
+      padding: 12px 12px;
+      font-size: 13px;
+      font-weight: 700;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+    tbody tr:last-child td{ border-bottom:none; }
+
+    .rank{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      min-width: 34px;
+      height: 28px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.14);
+      background: rgba(255,255,255,0.06);
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 800;
+    }
+
+    .emptyState{
+      height:100%;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      color: var(--muted);
+      font-size: 13px;
+      text-align:center;
+      padding: 18px;
+    }
+
+    .toast{
+      position:absolute;
+      top: 16px;
+      right: 16px;
+      z-index: 50;
+      padding: 12px 14px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,0.18);
+      background: rgba(0,0,0,0.45);
+      backdrop-filter: blur(12px);
+      box-shadow: var(--shadow);
+      font-size: 13px;
+      color: rgba(255,255,255,0.92);
+      max-width: 420px;
+      opacity:0;
+      transform: translateY(-8px);
+      transition: opacity 180ms ease, transform 180ms ease;
+      pointer-events:none;
+    }
+    .toast.show{
+      opacity:1;
+      transform: translateY(0);
+    }
+    .toast strong{ color:#fff; }
+
+    /* responsive */
+    @media (max-width: 980px){
+      body{ overflow:auto; }
+      .app{
+        height:auto;
+        min-height:100%;
+        grid-template-columns: 1fr;
+      }
+      .controls{
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="app">
+    <!-- MAIN -->
+    <section class="card main">
+      <div class="mainHeader">
+        <div class="title">
+          <h1>2026 글로벌리 키즈 ENG 자동 추첨 프로그램</h1>
+          <p>본 추첨은 W3C 표준 <strong>Web Cryptography API 기반의 CSPRNG</strong>와 <strong>Fisher–Yates 셔플 알고리즘을 적용</strong>하여 <strong>중복 및 확률 편향이 없는 공정한 자동 추첨 방식</strong>으로 진행됩니다.</p>
+          <!--p>응모자 번호는 <strong>1</strong>부터 <strong>N</strong>까지로 가정하며, 중복 없이 당첨/예비당첨을 추출합니다.</p-->
+        </div>
+        <div class="statusPill" id="statusPill">
+          <span class="dot" id="statusDot"></span>
+          <span id="statusText">대기 중</span>
+        </div>
+      </div>
+
+      <div class="stage">
+        <div class="bigCenter" id="bigCenter">
+          <div class="countdown" id="countdownText">READY</div>
+          <div class="hint">
+            <span id="hintLeft">설정 값을 입력하고 “추첨 시작”을 누르세요.</span>
+            <span id="hintRight">10초 카운트다운 → 당첨자 순차 공개 → 예비당첨 표</span>
+          </div>
+        </div>
+
+        <div class="winnersArea">
+          <div class="winnersTitle">
+            <div><strong>당첨 번호</strong></div>
+            <div id="winnersMeta">-</div>
+          </div>
+          <div class="ballsRow" id="ballsRow"></div>
+        </div>
+      </div>
+
+      <div class="controls">
+        <div class="field">
+          <label for="totalApplicants">응모자 수 (N)</label>
+          <input id="totalApplicants" type="number" min="1" step="1" value="100" />
+        </div>
+        <div class="field">
+          <label for="winnerCount">당첨자 수</label>
+          <input id="winnerCount" type="number" min="0" step="1" value="5" />
+        </div>
+        <div class="field">
+          <label for="reserveCount">예비 당첨자 수</label>
+          <input id="reserveCount" type="number" min="0" step="1" value="10" />
+        </div>
+
+        <div style="display:flex; gap:10px; align-items:end; justify-content:flex-end;">
+          <button class="btn btnSecondary" id="resetBtn" type="button">초기화</button>
+          <button class="btn" id="startBtn" type="button">추첨 시작</button>
+        </div>
+      </div>
+
+      <div class="toast" id="toast"></div>
+    </section>
+
+    <!-- SIDE -->
+    <aside class="card side">
+      <div class="sideHeader">
+        <h2>예비 당첨자</h2>
+        <div class="sub" id="reserveMeta">표시는 당첨 공개 완료 후</div>
+      </div>
+      <div class="tableWrap" id="tableWrap">
+        <div class="emptyState" id="emptyState">아직 예비 당첨자가 표시되지 않았습니다.</div>
+        <table id="reserveTable" style="display:none;">
+          <thead>
+            <tr>
+              <th style="width:110px;">순위</th>
+              <th>번호</th>
+            </tr>
+          </thead>
+          <tbody id="reserveTbody"></tbody>
+        </table>
+      </div>
+    </aside>
+  </div>
+
+  <script>
+    // ---------- Utilities ----------
+    const $ = (id) => document.getElementById(id);
+
+    function toast(msg){
+      const el = $("toast");
+      el.innerHTML = msg;
+      el.classList.add("show");
+      clearTimeout(toast._t);
+      toast._t = setTimeout(()=> el.classList.remove("show"), 2600);
+    }
+
+    function setStatus(state, text){
+      const dot = $("statusDot");
+      const label = $("statusText");
+      dot.classList.remove("running","done","error");
+      if(state) dot.classList.add(state);
+      label.textContent = text;
+    }
+
+    // Secure random int in [0, maxExclusive)
+    function randomInt(maxExclusive){
+      if(maxExclusive <= 0) throw new Error("maxExclusive must be > 0");
+      // rejection sampling to avoid modulo bias
+      const maxUint32 = 0xFFFFFFFF;
+      const limit = Math.floor((maxUint32 + 1) / maxExclusive) * maxExclusive;
+      const buf = new Uint32Array(1);
+      while(true){
+        crypto.getRandomValues(buf);
+        const x = buf[0];
+        if(x < limit) return x % maxExclusive;
+      }
+    }
+
+    // Sample k unique numbers from 1..N without replacement
+    // Uses Fisher-Yates partial shuffle on an array [1..N]
+    function sampleUnique(N, k){
+      const arr = new Array(N);
+      for(let i=0;i<N;i++) arr[i] = i+1;
+
+      // partial Fisher-Yates: only first k positions
+      for(let i=0;i<k;i++){
+        const j = i + randomInt(N - i);
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr.slice(0,k);
+    }
+
+    // Color palette for balls (cycling)
+    const ballColors = [
+      "linear-gradient(180deg, rgba(77,124,255,1), rgba(56,92,255,0.82))",
+      "linear-gradient(180deg, rgba(255,77,239,1), rgba(180,77,255,0.82))",
+      "linear-gradient(180deg, rgba(46,204,113,1), rgba(26,188,156,0.82))",
+      "linear-gradient(180deg, rgba(255,180,60,1), rgba(255,120,60,0.82))",
+      "linear-gradient(180deg, rgba(255,90,90,1), rgba(255,77,79,0.82))",
+      "linear-gradient(180deg, rgba(120,210,255,1), rgba(77,124,255,0.70))",
+      "linear-gradient(180deg, rgba(200,200,200,1), rgba(140,140,140,0.75))",
+      "linear-gradient(180deg, rgba(180,140,255,1), rgba(120,90,255,0.78))"
+    ];
+
+    // ---------- App State ----------
+    let running = false;
+    let countdownTimer = null;
+    let revealTimer = null;
+
+    function resetUI(){
+      clearInterval(countdownTimer);
+      clearInterval(revealTimer);
+      countdownTimer = null;
+      revealTimer = null;
+      running = false;
+
+      $("countdownText").textContent = "READY";
+      $("hintLeft").textContent = "설정 값을 입력하고 “추첨 시작”을 누르세요.";
+      $("winnersMeta").textContent = "-";
+      $("ballsRow").innerHTML = "";
+
+      $("reserveMeta").textContent = "표시는 당첨 공개 완료 후";
+      $("emptyState").style.display = "flex";
+      $("reserveTable").style.display = "none";
+      $("reserveTbody").innerHTML = "";
+
+      $("startBtn").disabled = false;
+      $("resetBtn").disabled = false;
+
+      setStatus(null, "대기 중");
+    }
+
+    function validateInputs(N, w, r){
+      if(!Number.isInteger(N) || N < 1) return "응모자 수(N)는 1 이상 정수여야 합니다.";
+      if(!Number.isInteger(w) || w < 0) return "당첨자 수는 0 이상 정수여야 합니다.";
+      if(!Number.isInteger(r) || r < 0) return "예비 당첨자 수는 0 이상 정수여야 합니다.";
+      if(w + r > N) return "당첨자 수 + 예비 당첨자 수는 응모자 수(N)보다 클 수 없습니다.";
+      if(w === 0 && r === 0) return "당첨자 수 또는 예비 당첨자 수 중 하나는 1 이상이어야 합니다.";
+      return null;
+    }
+
+    async function startDraw(){
+      if(running) return;
+
+      const N = parseInt($("totalApplicants").value, 10);
+      const w = parseInt($("winnerCount").value, 10);
+      const r = parseInt($("reserveCount").value, 10);
+
+      const err = validateInputs(N,w,r);
+      if(err){
+        setStatus("error","입력 오류");
+        toast(`<strong>입력 오류:</strong> ${err}`);
+        return;
+      }
+
+      running = true;
+      $("startBtn").disabled = true;
+
+      // Prepare draw results up front (fair + deterministic after start)
+      const totalPick = w + r;
+      const picks = sampleUnique(N, totalPick);
+
+      const winners = picks.slice(0, w);
+      const reserves = picks.slice(w);
+
+      // UI reset for run
+      $("ballsRow").innerHTML = "";
+      $("reserveTbody").innerHTML = "";
+      $("reserveMeta").textContent = "추첨 진행 중";
+      $("emptyState").style.display = "flex";
+      $("reserveTable").style.display = "none";
+
+      $("winnersMeta").textContent = `당첨자 ${w}명 / 예비 ${r}명`;
+      $("hintLeft").textContent = "카운트다운 후 당첨 번호가 순차 공개됩니다.";
+      setStatus("running","진행 중");
+
+      // 10s countdown
+      let t = 10;
+      $("countdownText").textContent = String(t);
+      countdownTimer = setInterval(()=>{
+        t -= 1;
+        if(t > 0){
+          $("countdownText").textContent = String(t);
+        }else{
+          clearInterval(countdownTimer);
+          countdownTimer = null;
+          $("countdownText").textContent = "DRAW";
+          // reveal winners one by one
+          revealWinnersThenShowReserves(winners, reserves);
+        }
+      }, 1000);
+    }
+
+    function createBall(number, index){
+      const div = document.createElement("div");
+      div.className = "ball";
+      div.textContent = number;
+      div.style.background = ballColors[index % ballColors.length];
+      return div;
+    }
+
+    function revealWinnersThenShowReserves(winners, reserves){
+      const row = $("ballsRow");
+
+      if(winners.length === 0){
+        $("countdownText").textContent = "DONE";
+        showReserves(reserves);
+        setStatus("done","완료");
+        running = false;
+        $("startBtn").disabled = false;
+        toast("당첨자 공개가 완료되었습니다.");
+        return;
+      }
+
+      let i = 0;
+      $("countdownText").textContent = "WINNERS";
+
+      revealTimer = setInterval(()=>{
+        const ball = createBall(winners[i], i);
+        row.appendChild(ball);
+
+        i += 1;
+        if(i >= winners.length){
+          clearInterval(revealTimer);
+          revealTimer = null;
+
+          // short pause then show reserves
+          setTimeout(()=>{
+            $("countdownText").textContent = "RESERVE";
+            showReserves(reserves);
+            $("countdownText").textContent = "DONE";
+            setStatus("done","완료");
+            running = false;
+            $("startBtn").disabled = false;
+            toast("추첨이 완료되었습니다.");
+          }, 700);
+        }
+      }, 900); // each winner reveals every 0.9s
+    }
+
+    function showReserves(reserves){
+      const meta = $("reserveMeta");
+      const empty = $("emptyState");
+      const table = $("reserveTable");
+      const tbody = $("reserveTbody");
+
+      if(reserves.length === 0){
+        meta.textContent = "예비 당첨자 없음";
+        empty.style.display = "flex";
+        table.style.display = "none";
+        return;
+      }
+
+      meta.textContent = `예비 ${reserves.length}명 (순위 포함)`;
+      empty.style.display = "none";
+      table.style.display = "table";
+
+      reserves.forEach((num, idx)=>{
+        const tr = document.createElement("tr");
+
+        const tdRank = document.createElement("td");
+        const badge = document.createElement("span");
+        badge.className = "rank";
+        badge.textContent = `${idx+1}위`;
+        tdRank.appendChild(badge);
+
+        const tdNum = document.createElement("td");
+        tdNum.textContent = String(num);
+
+        tr.appendChild(tdRank);
+        tr.appendChild(tdNum);
+        tbody.appendChild(tr);
+      });
+    }
+
+    // ---------- Events ----------
+    $("startBtn").addEventListener("click", startDraw);
+    $("resetBtn").addEventListener("click", ()=> {
+      resetUI();
+      toast("초기화되었습니다.");
+    });
+
+    // basic input sanitation: clamp to integers on blur
+    ["totalApplicants","winnerCount","reserveCount"].forEach(id=>{
+      $(id).addEventListener("blur", ()=>{
+        const v = parseInt($(id).value, 10);
+        if(Number.isFinite(v)) $(id).value = String(v);
+      });
+    });
+
+    // init
+    resetUI();
+  </script>
+</body>
+</html>
