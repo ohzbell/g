@@ -9,6 +9,10 @@
   <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
 
+  <!-- jsPDF + AutoTable -->
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.3/dist/jspdf.plugin.autotable.min.js"></script>
+
   <style>
     :root{
       --bg: #0b1020;
@@ -37,7 +41,6 @@
       overflow:hidden;
     }
 
-    /* View.js 느낌: Glass / Clean / Big */
     .app{
       height:100%;
       width:100%;
@@ -56,7 +59,6 @@
       -webkit-backdrop-filter: blur(14px);
     }
 
-    /* Left: Main */
     .main{
       position:relative;
       display:flex;
@@ -67,15 +69,17 @@
 
     .mainHeader{
       display:flex;
-      align-items:center;
+      align-items:flex-start;
       justify-content:space-between;
       padding: 18px 18px 14px 18px;
       border-bottom: 1px solid var(--border);
+      gap: 14px;
     }
     .title{
       display:flex;
       flex-direction:column;
       gap:4px;
+      min-width: 0;
     }
     .title h1{
       font-size: 20px;
@@ -89,6 +93,15 @@
       font-size: 13px;
       line-height:1.35;
     }
+
+    .headerRight{
+      display:flex;
+      flex-direction:column;
+      align-items:flex-end;
+      gap:10px;
+      min-width: 320px;
+    }
+
     .statusPill{
       display:inline-flex;
       align-items:center;
@@ -109,6 +122,48 @@
     .dot.running{ background: #4dffb5; box-shadow:0 0 0 4px rgba(77,255,181,0.12); }
     .dot.done{ background: #4d7cff; box-shadow:0 0 0 4px rgba(77,124,255,0.14); }
     .dot.error{ background: var(--danger); box-shadow:0 0 0 4px rgba(255,77,79,0.14); }
+
+    .seedBox{
+      width:100%;
+      padding: 10px 12px;
+      border-radius: 14px;
+      border:1px solid rgba(255,255,255,0.12);
+      background: rgba(0,0,0,0.18);
+      display:none; /*flex*/
+      flex-direction:column;
+      gap: 6px;
+    }
+    .seedRow{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .seedValue{
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      color: rgba(255,255,255,0.88);
+      font-size: 12px;
+      word-break: break-all;
+      line-height:1.35;
+    }
+    .miniBtn{
+      height: 30px;
+      padding: 0 10px;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.16);
+      background: rgba(255,255,255,0.06);
+      color: rgba(255,255,255,0.90);
+      font-weight: 800;
+      font-size: 12px;
+      cursor:pointer;
+      transition: transform 120ms ease, filter 120ms ease, opacity 120ms ease;
+      white-space:nowrap;
+    }
+    .miniBtn:hover{ filter: brightness(1.06); transform: translateY(-1px); }
+    .miniBtn:active{ transform: translateY(0px); }
+    .miniBtn:disabled{ opacity:0.55; cursor:not-allowed; }
 
     .stage{
       position:relative;
@@ -188,7 +243,7 @@
       align-items:center;
       justify-content:center;
       font-weight: 800;
-      font-size: 22px;
+      font-size: 30px;
       letter-spacing: -0.02em;
       color: rgba(255,255,255,0.96);
       border: 1px solid rgba(255,255,255,0.18);
@@ -260,14 +315,12 @@
       cursor:not-allowed;
       box-shadow:none;
     }
-
     .btnSecondary{
       background: rgba(255,255,255,0.06);
       color: var(--text);
       box-shadow:none;
     }
 
-    /* Right: Reserve table */
     .side{
       display:flex;
       flex-direction:column;
@@ -319,7 +372,7 @@
     }
     tbody td{
       padding: 12px 12px;
-      font-size: 13px;
+      font-size: 36px;
       font-weight: 700;
       border-bottom: 1px solid rgba(255,255,255,0.08);
     }
@@ -363,19 +416,80 @@
       box-shadow: var(--shadow);
       font-size: 13px;
       color: rgba(255,255,255,0.92);
-      max-width: 420px;
+      max-width: 520px;
       opacity:0;
       transform: translateY(-8px);
       transition: opacity 180ms ease, transform 180ms ease;
       pointer-events:none;
     }
-    .toast.show{
-      opacity:1;
-      transform: translateY(0);
-    }
+    .toast.show{ opacity:1; transform: translateY(0); }
     .toast strong{ color:#fff; }
 
-    /* responsive */
+    /* Log Modal */
+    .modalOverlay{
+      position:fixed;
+      inset:0;
+      background: rgba(0,0,0,0.55);
+      backdrop-filter: blur(8px);
+      display:none;
+      z-index: 999;
+      padding: 18px;
+    }
+    .modal{
+      max-width: 980px;
+      margin: 0 auto;
+      height: calc(100vh - 36px);
+      border-radius: 18px;
+      border: 1px solid rgba(255,255,255,0.14);
+      background: rgba(15,18,32,0.72);
+      box-shadow: var(--shadow);
+      display:flex;
+      flex-direction:column;
+      overflow:hidden;
+    }
+    .modalHeader{
+      padding: 14px 16px;
+      border-bottom: 1px solid rgba(255,255,255,0.12);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+    }
+    .modalHeader h3{
+      margin:0;
+      font-size: 14px;
+      font-weight: 900;
+      letter-spacing:-0.01em;
+    }
+    .modalActions{ display:flex; gap:10px; align-items:center; }
+    .modalBody{
+      padding: 14px 16px 16px 16px;
+      min-height:0;
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
+    .logArea{
+      flex:1;
+      min-height:0;
+      width:100%;
+      resize:none;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(0,0,0,0.28);
+      color: rgba(255,255,255,0.90);
+      padding: 12px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 12px;
+      line-height:1.45;
+      outline:none;
+    }
+    .modalHint{
+      color: var(--muted);
+      font-size: 12px;
+      line-height:1.4;
+    }
+
     @media (max-width: 980px){
       body{ overflow:auto; }
       .app{
@@ -383,9 +497,8 @@
         min-height:100%;
         grid-template-columns: 1fr;
       }
-      .controls{
-        grid-template-columns: 1fr;
-      }
+      .controls{ grid-template-columns: 1fr; }
+      .headerRight{ min-width: 0; width:100%; align-items:stretch; }
     }
   </style>
 </head>
@@ -400,9 +513,23 @@
           <p>본 추첨은 W3C 표준 <strong>Web Cryptography API 기반의 CSPRNG</strong>와 <strong>Fisher–Yates 셔플 알고리즘을 적용</strong>하여 <strong>중복 및 확률 편향이 없는 공정한 자동 추첨 방식</strong>으로 진행됩니다.</p>
           <!--p>응모자 번호는 <strong>1</strong>부터 <strong>N</strong>까지로 가정하며, 중복 없이 당첨/예비당첨을 추출합니다.</p-->
         </div>
-        <div class="statusPill" id="statusPill">
-          <span class="dot" id="statusDot"></span>
-          <span id="statusText">대기 중</span>
+
+        <div class="headerRight">
+          <div class="statusPill">
+            <span class="dot" id="statusDot"></span>
+            <span id="statusText">대기 중</span>
+          </div>
+
+          <div class="seedBox">
+            <div class="seedRow">
+              <span>Seed (SHA-256 Counter RNG)</span>
+              <div style="display:flex; gap:8px;">
+                <button class="miniBtn" id="copySeedBtn" type="button" disabled>시드 복사</button>
+                <button class="miniBtn" id="openLogBtnTop" type="button">로그 보기</button>
+              </div>
+            </div>
+            <div class="seedValue" id="seedValue">-</div>
+          </div>
         </div>
       </div>
 
@@ -427,19 +554,21 @@
       <div class="controls">
         <div class="field">
           <label for="totalApplicants">응모자 수 (N)</label>
-          <input id="totalApplicants" type="number" min="1" step="1" value="100" />
+          <input id="totalApplicants" type="number" min="1" step="1" value="120" />
         </div>
         <div class="field">
           <label for="winnerCount">당첨자 수</label>
-          <input id="winnerCount" type="number" min="0" step="1" value="5" />
+          <input id="winnerCount" type="number" min="0" step="1" value="55" />
         </div>
         <div class="field">
           <label for="reserveCount">예비 당첨자 수</label>
           <input id="reserveCount" type="number" min="0" step="1" value="10" />
         </div>
 
-        <div style="display:flex; gap:10px; align-items:end; justify-content:flex-end;">
+        <div style="display:flex; gap:10px; align-items:end; justify-content:flex-end; flex-wrap:wrap;">
           <button class="btn btnSecondary" id="resetBtn" type="button">초기화</button>
+          <button class="btn btnSecondary" id="openLogBtn" type="button">추첨 로그</button>
+          <button class="btn btnSecondary" id="pdfBtn" type="button" disabled>결과 PDF 저장</button>
           <button class="btn" id="startBtn" type="button">추첨 시작</button>
         </div>
       </div>
@@ -468,6 +597,27 @@
     </aside>
   </div>
 
+  <!-- LOG MODAL -->
+  <div class="modalOverlay" id="modalOverlay">
+    <div class="modal">
+      <div class="modalHeader">
+        <h3>추첨 로그 (Audit Log)</h3>
+        <div class="modalActions">
+          <button class="miniBtn" id="copyLogBtn" type="button">로그 복사</button>
+          <button class="miniBtn" id="downloadLogBtn" type="button">JSON 다운로드</button>
+          <button class="miniBtn" id="closeLogBtn" type="button">닫기</button>
+        </div>
+      </div>
+      <div class="modalBody">
+        <div class="modalHint">
+          이 로그는 입력값, 시드, 난수 생성 방식, 당첨/예비 결과, 무결성 해시를 포함합니다.
+          동일한 입력과 시드로 결과 재현이 가능합니다(Seed 기반 RNG).
+        </div>
+        <textarea class="logArea" id="logArea" readonly></textarea>
+      </div>
+    </div>
+  </div>
+
   <script>
     // ---------- Utilities ----------
     const $ = (id) => document.getElementById(id);
@@ -488,29 +638,71 @@
       label.textContent = text;
     }
 
-    // Secure random int in [0, maxExclusive)
-    function randomInt(maxExclusive){
-      if(maxExclusive <= 0) throw new Error("maxExclusive must be > 0");
-      // rejection sampling to avoid modulo bias
-      const maxUint32 = 0xFFFFFFFF;
-      const limit = Math.floor((maxUint32 + 1) / maxExclusive) * maxExclusive;
-      const buf = new Uint32Array(1);
-      while(true){
-        crypto.getRandomValues(buf);
-        const x = buf[0];
-        if(x < limit) return x % maxExclusive;
+    function bytesToHex(bytes){
+      return Array.from(bytes).map(b => b.toString(16).padStart(2,"0")).join("");
+    }
+
+    async function sha256Hex(str){
+      const enc = new TextEncoder().encode(str);
+      const digest = await crypto.subtle.digest("SHA-256", enc);
+      return bytesToHex(new Uint8Array(digest));
+    }
+
+    function downloadText(filename, text){
+      const blob = new Blob([text], {type:"application/json;charset=utf-8"});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    }
+
+    // ---------- Seeded RNG (SHA-256 Counter) ----------
+    // Output: deterministic uint32 stream from (seed || counter) hashed by SHA-256
+    class Sha256CounterRNG {
+      constructor(seedBytes){
+        this.seed = seedBytes;            // Uint8Array
+        this.counter = 0;
+      }
+      async nextUint32(){
+        const counterBytes = new Uint8Array(4);
+        const dv = new DataView(counterBytes.buffer);
+        dv.setUint32(0, this.counter >>> 0, false); // big-endian
+        this.counter++;
+
+        // concat seed + counterBytes
+        const input = new Uint8Array(this.seed.length + counterBytes.length);
+        input.set(this.seed, 0);
+        input.set(counterBytes, this.seed.length);
+
+        const digest = await crypto.subtle.digest("SHA-256", input);
+        const out = new Uint8Array(digest);
+        // take first 4 bytes as uint32 BE
+        const dvOut = new DataView(out.buffer);
+        return dvOut.getUint32(0, false);
+      }
+      async randomInt(maxExclusive){
+        if(maxExclusive <= 0) throw new Error("maxExclusive must be > 0");
+        // rejection sampling to avoid modulo bias
+        const maxUint32 = 0xFFFFFFFF;
+        const limit = Math.floor((maxUint32 + 1) / maxExclusive) * maxExclusive;
+        while(true){
+          const x = await this.nextUint32();
+          if(x < limit) return x % maxExclusive;
+        }
       }
     }
 
-    // Sample k unique numbers from 1..N without replacement
-    // Uses Fisher-Yates partial shuffle on an array [1..N]
-    function sampleUnique(N, k){
+    // Sample k unique numbers from 1..N without replacement (partial Fisher-Yates)
+    async function sampleUniqueSeeded(N, k, rng){
       const arr = new Array(N);
       for(let i=0;i<N;i++) arr[i] = i+1;
 
-      // partial Fisher-Yates: only first k positions
       for(let i=0;i<k;i++){
-        const j = i + randomInt(N - i);
+        const j = i + await rng.randomInt(N - i);
         [arr[i], arr[j]] = [arr[j], arr[i]];
       }
       return arr.slice(0,k);
@@ -533,6 +725,12 @@
     let countdownTimer = null;
     let revealTimer = null;
 
+    let currentSeedHex = null;
+    let currentLog = null;     // object
+    let currentWinners = [];
+    let currentReserves = [];
+    let currentIntegrityHash = null;
+
     function resetUI(){
       clearInterval(countdownTimer);
       clearInterval(revealTimer);
@@ -553,6 +751,17 @@
       $("startBtn").disabled = false;
       $("resetBtn").disabled = false;
 
+      $("pdfBtn").disabled = true;
+      $("copySeedBtn").disabled = true;
+
+      $("seedValue").textContent = "-";
+      currentSeedHex = null;
+      currentLog = null;
+      currentWinners = [];
+      currentReserves = [];
+      currentIntegrityHash = null;
+      updateLogView();
+
       setStatus(null, "대기 중");
     }
 
@@ -565,58 +774,6 @@
       return null;
     }
 
-    async function startDraw(){
-      if(running) return;
-
-      const N = parseInt($("totalApplicants").value, 10);
-      const w = parseInt($("winnerCount").value, 10);
-      const r = parseInt($("reserveCount").value, 10);
-
-      const err = validateInputs(N,w,r);
-      if(err){
-        setStatus("error","입력 오류");
-        toast(`<strong>입력 오류:</strong> ${err}`);
-        return;
-      }
-
-      running = true;
-      $("startBtn").disabled = true;
-
-      // Prepare draw results up front (fair + deterministic after start)
-      const totalPick = w + r;
-      const picks = sampleUnique(N, totalPick);
-
-      const winners = picks.slice(0, w);
-      const reserves = picks.slice(w);
-
-      // UI reset for run
-      $("ballsRow").innerHTML = "";
-      $("reserveTbody").innerHTML = "";
-      $("reserveMeta").textContent = "추첨 진행 중";
-      $("emptyState").style.display = "flex";
-      $("reserveTable").style.display = "none";
-
-      $("winnersMeta").textContent = `당첨자 ${w}명 / 예비 ${r}명`;
-      $("hintLeft").textContent = "카운트다운 후 당첨 번호가 순차 공개됩니다.";
-      setStatus("running","진행 중");
-
-      // 10s countdown
-      let t = 10;
-      $("countdownText").textContent = String(t);
-      countdownTimer = setInterval(()=>{
-        t -= 1;
-        if(t > 0){
-          $("countdownText").textContent = String(t);
-        }else{
-          clearInterval(countdownTimer);
-          countdownTimer = null;
-          $("countdownText").textContent = "DRAW";
-          // reveal winners one by one
-          revealWinnersThenShowReserves(winners, reserves);
-        }
-      }, 1000);
-    }
-
     function createBall(number, index){
       const div = document.createElement("div");
       div.className = "ball";
@@ -625,50 +782,13 @@
       return div;
     }
 
-    function revealWinnersThenShowReserves(winners, reserves){
-      const row = $("ballsRow");
-
-      if(winners.length === 0){
-        $("countdownText").textContent = "DONE";
-        showReserves(reserves);
-        setStatus("done","완료");
-        running = false;
-        $("startBtn").disabled = false;
-        toast("당첨자 공개가 완료되었습니다.");
-        return;
-      }
-
-      let i = 0;
-      $("countdownText").textContent = "WINNERS";
-
-      revealTimer = setInterval(()=>{
-        const ball = createBall(winners[i], i);
-        row.appendChild(ball);
-
-        i += 1;
-        if(i >= winners.length){
-          clearInterval(revealTimer);
-          revealTimer = null;
-
-          // short pause then show reserves
-          setTimeout(()=>{
-            $("countdownText").textContent = "RESERVE";
-            showReserves(reserves);
-            $("countdownText").textContent = "DONE";
-            setStatus("done","완료");
-            running = false;
-            $("startBtn").disabled = false;
-            toast("추첨이 완료되었습니다.");
-          }, 700);
-        }
-      }, 900); // each winner reveals every 0.9s
-    }
-
     function showReserves(reserves){
       const meta = $("reserveMeta");
       const empty = $("emptyState");
       const table = $("reserveTable");
       const tbody = $("reserveTbody");
+
+      tbody.innerHTML = "";
 
       if(reserves.length === 0){
         meta.textContent = "예비 당첨자 없음";
@@ -699,12 +819,322 @@
       });
     }
 
+    function updateLogView(){
+      $("logArea").value = currentLog ? JSON.stringify(currentLog, null, 2) : "";
+    }
+
+    function openLog(){
+      updateLogView();
+      $("modalOverlay").style.display = "block";
+      document.body.style.overflow = "hidden";
+    }
+    function closeLog(){
+      $("modalOverlay").style.display = "none";
+      document.body.style.overflow = "";
+    }
+
+    async function buildIntegrityHash({timestampISO, N, winners, reserves, seedHex}){
+      const payload = JSON.stringify({
+        timestampISO, N, winners, reserves, seedHex
+      });
+      return await sha256Hex(payload);
+    }
+
+    async function startDraw(){
+      if(running) return;
+
+      const N = parseInt($("totalApplicants").value, 10);
+      const w = parseInt($("winnerCount").value, 10);
+      const r = parseInt($("reserveCount").value, 10);
+
+      const err = validateInputs(N,w,r);
+      if(err){
+        setStatus("error","입력 오류");
+        toast(`<strong>입력 오류:</strong> ${err}`);
+        return;
+      }
+
+      running = true;
+      $("startBtn").disabled = true;
+      $("pdfBtn").disabled = true;
+
+      // create seed (32 bytes) - displayed & used for deterministic RNG
+      const seedBytes = new Uint8Array(32);
+      crypto.getRandomValues(seedBytes);
+      const seedHex = bytesToHex(seedBytes);
+      currentSeedHex = seedHex;
+      $("seedValue").textContent = seedHex;
+      $("copySeedBtn").disabled = false;
+
+      const timestampISO = new Date().toISOString();
+      const rng = new Sha256CounterRNG(seedBytes);
+
+      // Prepare draw results up front (deterministic after seed)
+      const totalPick = w + r;
+      const picks = await sampleUniqueSeeded(N, totalPick, rng);
+      const winners = picks.slice(0, w);
+      const reserves = picks.slice(w);
+
+      currentWinners = winners.slice();
+      currentReserves = reserves.slice();
+
+      // Build integrity hash (for audit)
+      const integrityHash = await buildIntegrityHash({
+        timestampISO, N, winners, reserves, seedHex
+      });
+      currentIntegrityHash = integrityHash;
+
+      // Create log (audit)
+      currentLog = {
+        version: "1.1",
+        timestampISO,
+        inputs: {
+          totalApplicantsN: N,
+          winnerCount: w,
+          reserveCount: r
+        },
+        fairness: {
+          seed: seedHex,
+          rng: "SHA-256 Counter-based deterministic RNG (Web Crypto SubtleCrypto digest)",
+          sampling: "Partial Fisher–Yates shuffle (without replacement)",
+          biasControl: "Rejection sampling (modulo bias prevention)"
+        },
+        results: {
+          winners,
+          reserves
+        },
+        integrity: {
+          method: "SHA-256(JSON({timestampISO,N,winners,reserves,seedHex}))",
+          hash: integrityHash
+        }
+      };
+      updateLogView();
+
+      // UI reset for run
+      $("ballsRow").innerHTML = "";
+      $("reserveTbody").innerHTML = "";
+      $("reserveMeta").textContent = "추첨 진행 중";
+      $("emptyState").style.display = "flex";
+      $("reserveTable").style.display = "none";
+
+      $("winnersMeta").textContent = `당첨자 ${w}명 / 예비 ${r}명`;
+      $("hintLeft").textContent = "카운트다운 후 당첨 번호가 순차 공개됩니다.";
+      setStatus("running","진행 중");
+
+      // 10s countdown
+      let t = 10;
+      $("countdownText").textContent = String(t);
+      countdownTimer = setInterval(()=>{
+        t -= 1;
+        if(t > 0){
+          $("countdownText").textContent = String(t);
+        }else{
+          clearInterval(countdownTimer);
+          countdownTimer = null;
+          $("countdownText").textContent = "DRAW";
+          revealWinnersThenShowReserves(winners, reserves);
+        }
+      }, 1000);
+    }
+
+    function revealWinnersThenShowReserves(winners, reserves){
+      const row = $("ballsRow");
+
+      if(winners.length === 0){
+        $("countdownText").textContent = "DONE";
+        showReserves(reserves);
+        setStatus("done","완료");
+        running = false;
+        $("startBtn").disabled = false;
+        $("pdfBtn").disabled = false;
+        toast("추첨이 완료되었습니다.");
+        return;
+      }
+
+      let i = 0;
+      $("countdownText").textContent = "WINNERS";
+
+      revealTimer = setInterval(()=>{
+        const ball = createBall(winners[i], i);
+        row.appendChild(ball);
+
+        i += 1;
+        if(i >= winners.length){
+          clearInterval(revealTimer);
+          revealTimer = null;
+
+          setTimeout(()=>{
+            $("countdownText").textContent = "RESERVE";
+            showReserves(reserves);
+            $("countdownText").textContent = "DONE";
+            setStatus("done","완료");
+            running = false;
+            $("startBtn").disabled = false;
+            $("pdfBtn").disabled = false;
+            toast("추첨이 완료되었습니다. PDF 저장이 가능합니다.");
+          }, 700);
+        }
+      }, 900);
+    }
+
+    function generatePDF(){
+      try{
+        if(!currentLog || !currentSeedHex){
+          toast("<strong>안내:</strong> 아직 추첨 결과가 없습니다.");
+          return;
+        }
+
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF({ unit: "pt", format: "a4" });
+
+        const margin = 40;
+        let y = 52;
+
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(18);
+        doc.text("Random Draw Result Report", margin, y);
+
+        y += 18;
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(11);
+        doc.text(`Generated: ${new Date().toISOString()}`, margin, y);
+
+        y += 18;
+        doc.setFontSize(11);
+        doc.text(`Timestamp (Draw): ${currentLog.timestampISO}`, margin, y);
+
+        y += 22;
+        doc.setFont("helvetica", "bold");
+        doc.text("Inputs", margin, y);
+
+        y += 10;
+        doc.setFont("helvetica", "normal");
+        doc.autoTable({
+          startY: y + 8,
+          theme: "grid",
+          styles: { font: "helvetica", fontSize: 10 },
+          head: [["Item", "Value"]],
+          body: [
+            ["Total Applicants (N)", String(currentLog.inputs.totalApplicantsN)],
+            ["Winner Count", String(currentLog.inputs.winnerCount)],
+            ["Reserve Count", String(currentLog.inputs.reserveCount)]
+          ],
+          margin: { left: margin, right: margin }
+        });
+
+        y = doc.lastAutoTable.finalY + 18;
+
+        doc.setFont("helvetica", "bold");
+        doc.text("Fairness / RNG", margin, y);
+
+        y += 10;
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(9);
+        const seedLabel = "Seed (hex):";
+        doc.text(seedLabel, margin, y + 14);
+
+        // seed line wrap
+        const seedText = currentSeedHex;
+        const seedLines = doc.splitTextToSize(seedText, 520);
+        doc.text(seedLines, margin + 70, y + 14);
+
+        y += 14 + (seedLines.length * 10) + 10;
+        doc.setFontSize(10);
+        doc.text(`RNG: ${currentLog.fairness.rng}`, margin, y);
+        y += 14;
+        doc.text(`Sampling: ${currentLog.fairness.sampling}`, margin, y);
+        y += 14;
+        doc.text(`Bias Control: ${currentLog.fairness.biasControl}`, margin, y);
+
+        y += 22;
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(12);
+        doc.text("Winners", margin, y);
+
+        doc.autoTable({
+          startY: y + 8,
+          theme: "grid",
+          styles: { font: "helvetica", fontSize: 10 },
+          head: [["Rank", "Number"]],
+          body: currentWinners.map((n, idx)=> [String(idx+1), String(n)]),
+          margin: { left: margin, right: margin }
+        });
+
+        y = doc.lastAutoTable.finalY + 18;
+
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(12);
+        doc.text("Reserves", margin, y);
+
+        doc.autoTable({
+          startY: y + 8,
+          theme: "grid",
+          styles: { font: "helvetica", fontSize: 10 },
+          head: [["Rank", "Number"]],
+          body: currentReserves.map((n, idx)=> [String(idx+1), String(n)]),
+          margin: { left: margin, right: margin }
+        });
+
+        y = doc.lastAutoTable.finalY + 18;
+
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(11);
+        doc.text("Integrity", margin, y);
+        y += 14;
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(10);
+        doc.text(`Hash: ${currentIntegrityHash}`, margin, y);
+
+        const filename = `draw_result_${currentLog.timestampISO.replace(/[:.]/g,"-")}.pdf`;
+        doc.save(filename);
+      }catch(e){
+        console.error(e);
+        toast("<strong>오류:</strong> PDF 생성 중 문제가 발생했습니다.");
+      }
+    }
+
     // ---------- Events ----------
     $("startBtn").addEventListener("click", startDraw);
     $("resetBtn").addEventListener("click", ()=> {
       resetUI();
       toast("초기화되었습니다.");
     });
+
+    $("openLogBtn").addEventListener("click", openLog);
+    $("openLogBtnTop").addEventListener("click", openLog);
+    $("closeLogBtn").addEventListener("click", closeLog);
+    $("modalOverlay").addEventListener("click", (e)=>{
+      if(e.target === $("modalOverlay")) closeLog();
+    });
+
+    $("copySeedBtn").addEventListener("click", async ()=>{
+      if(!currentSeedHex) return;
+      try{
+        await navigator.clipboard.writeText(currentSeedHex);
+        toast("시드가 복사되었습니다.");
+      }catch{
+        toast("<strong>안내:</strong> 클립보드 복사 권한이 필요합니다.");
+      }
+    });
+
+    $("copyLogBtn").addEventListener("click", async ()=>{
+      if(!currentLog) { toast("<strong>안내:</strong> 로그가 없습니다."); return; }
+      try{
+        await navigator.clipboard.writeText(JSON.stringify(currentLog, null, 2));
+        toast("로그가 복사되었습니다.");
+      }catch{
+        toast("<strong>안내:</strong> 클립보드 복사 권한이 필요합니다.");
+      }
+    });
+
+    $("downloadLogBtn").addEventListener("click", ()=>{
+      if(!currentLog) { toast("<strong>안내:</strong> 로그가 없습니다."); return; }
+      const name = `draw_log_${currentLog.timestampISO.replace(/[:.]/g,"-")}.json`;
+      downloadText(name, JSON.stringify(currentLog, null, 2));
+      toast("JSON 로그를 다운로드했습니다.");
+    });
+
+    $("pdfBtn").addEventListener("click", generatePDF);
 
     // basic input sanitation: clamp to integers on blur
     ["totalApplicants","winnerCount","reserveCount"].forEach(id=>{
